@@ -4,4 +4,5 @@ var x, y;
 Begin
 x:=toto;
 read(y);
-end.
+write(x)
+end..

@@ -36,7 +36,9 @@ typedef enum
     NUM_TOKEN,
     ERREUR_TOKEN,
     EOF_TOKEN,
-    EG_TOKEN
+    EG_TOKEN,REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN,
+    INTO_TOKEN,DOWNTO_TOKEN,
+    DDOT_TOKEN
 } CODES_LEX;
 
 // erreur types
@@ -75,7 +77,8 @@ typedef enum
     EOF_ERR,
     EG_ERR,
     CONST_VAR_BEGIN_ERR,
-    VAR_BEGIN_ERR
+    VAR_BEGIN_ERR,REPEAT_ERR,UNTIL_ERR,FOR_ERR,ELSE_ERR,CASE_ERR,OF_ERR,
+    INTO_ERR,DOWNTO_ERR,DDOT_ERR
 } CODES_ERR;
 
 typedef struct
@@ -115,6 +118,9 @@ void CONSTS();
 void Sym_Suiv();
 void lire_mot();
 void lire_nombre();
+void CAS();
+void POUR();
+void REPETER();
 
 // functions definition
 
@@ -138,49 +144,73 @@ void lire_mot()
     mot[indice] = '\0';
 
     // Vérifier si le mot est un mot-clé
-    if (strcasecmp(mot, "program") == 0)
+    if (stricmp(mot, "program") == 0)
     {
         SYM_COUR.CODE = PROGRAM_TOKEN;
     }
-    else if (strcasecmp(mot, "const") == 0)
+    else if (stricmp(mot, "const") == 0)
     {
         SYM_COUR.CODE = CONST_TOKEN;
     }
-    else if (strcasecmp(mot, "var") == 0)
+    else if (stricmp(mot, "var") == 0)
     {
         SYM_COUR.CODE = VAR_TOKEN;
     }
-    else if (strcasecmp(mot, "begin") == 0)
+    else if (stricmp(mot, "begin") == 0)
     {
         SYM_COUR.CODE = BEGIN_TOKEN;
     }
-    else if (strcasecmp(mot, "end") == 0)
+    else if (stricmp(mot, "end") == 0)
     {
         SYM_COUR.CODE = END_TOKEN;
     }
-    else if (strcasecmp(mot, "if") == 0)
+    else if (stricmp(mot, "if") == 0)
     {
         SYM_COUR.CODE = IF_TOKEN;
     }
-    else if (strcasecmp(mot, "then") == 0)
+    else if (stricmp(mot, "then") == 0)
     {
         SYM_COUR.CODE = THEN_TOKEN;
     }
-    else if (strcasecmp(mot, "while") == 0)
+    else if (stricmp(mot, "while") == 0)
     {
         SYM_COUR.CODE = WHILE_TOKEN;
     }
-    else if (strcasecmp(mot, "do") == 0)
+    else if (stricmp(mot, "do") == 0)
     {
         SYM_COUR.CODE = DO_TOKEN;
     }
-    else if (strcasecmp(mot, "read") == 0)
+    else if (stricmp(mot, "read") == 0)
     {
         SYM_COUR.CODE = READ_TOKEN;
     }
-    else if (strcasecmp(mot, "write") == 0)
+    else if (stricmp(mot, "write") == 0)
     {
         SYM_COUR.CODE = WRITE_TOKEN;
+    }
+    else if (stricmp(mot, "else") == 0)
+    {
+        SYM_COUR.CODE = ELSE_TOKEN;
+    }
+    else if (stricmp(mot, "repeat") == 0)
+    {
+        SYM_COUR.CODE = REPEAT_TOKEN;
+    }
+    else if (stricmp(mot, "until") == 0)
+    {
+        SYM_COUR.CODE = UNTIL_TOKEN;
+    }
+    else if (stricmp(mot, "for") == 0)
+    {
+        SYM_COUR.CODE = FOR_TOKEN;
+    }
+    else if (stricmp(mot, "case") == 0)
+    {
+        SYM_COUR.CODE = CASE_TOKEN;
+    }
+    else if (stricmp(mot, "of") == 0)
+    {
+        SYM_COUR.CODE = OF_TOKEN;
     }
     else
     {
@@ -273,7 +303,7 @@ void Sym_Suiv()
             }
             else
             {
-                SYM_COUR.CODE = ERREUR_TOKEN;
+                SYM_COUR.CODE = DDOT_TOKEN;
             }
             break;
 
@@ -335,7 +365,10 @@ void Sym_Suiv()
             SYM_COUR.CODE = ERREUR_TOKEN;
             Lire_Car();
         }
+        strcpy(SYM_COUR.NOM , Car_Cour);
     }
+
+    printf("Symbol: %s\n", SYM_COUR.NOM);
 }
 
 void Lire_Car()
@@ -367,27 +400,8 @@ void PROGRAM()
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(PV_TOKEN, PV_ERR);
     BLOCK();
+    Test_Symbole(PT_TOKEN, PT_ERR);
 
-    //Test_Symbole(PT_TOKEN, PT_ERR);
-    // Check for the dot after BLOCK
-    if (SYM_COUR.CODE == PT_TOKEN)
-    {
-        Sym_Suiv(); // Consume the dot
-        printf("Program execution completed.\nBRAVO: le programme est correcte!!!");
-    }
-    else
-    {
-        Erreur(PT_ERR);
-        printf("PAS BRAVO: fin de programme erronée!!!!\n");
-
-        // Add this line to consume symbols until the end of the file
-        while (SYM_COUR.CODE != FIN_TOKEN)
-        {
-            printf("Current Token: %d\n", SYM_COUR.CODE);
-            printf("Current Lexeme: %s\n", SYM_COUR.NOM);
-            Sym_Suiv();
-        }
-    }
 }
 
 void BLOCK()
@@ -467,6 +481,9 @@ void INSTS()
         if (SYM_COUR.CODE == END_TOKEN)
         {
             Sym_Suiv();
+            printf("rani wslt lhna");
+            printf("Current Token: %d\n", SYM_COUR.CODE);
+            printf("Current Lexeme: %s\n", SYM_COUR.NOM);
         }
         else
         {
@@ -503,6 +520,15 @@ void INST()
     case READ_TOKEN:
         LIRE();
         break;
+    case REPEAT_TOKEN:
+        REPETER();
+        break;
+    case FOR_TOKEN:
+        POUR();
+        break;
+    case CASE_TOKEN:
+        CAS();
+        break;
     default:
         break;
     }
@@ -522,6 +548,10 @@ void SI()
     COND();
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
+    if (SYM_COUR.CODE == ELSE_TOKEN)
+    {
+        INST();
+    }
 }
 
 void TANTQUE()
@@ -623,7 +653,7 @@ void RELOP()
     case SUP_TOKEN:
     case INFEG_TOKEN:
     case SUPEG_TOKEN:
-        Test_Symbole(SYM_COUR.CODE, EG_ERR);
+        Test_Symbole(EG_TOKEN, EG_ERR);
         break;
     default:
         Erreur(ERREUR_ERR);
@@ -636,10 +666,10 @@ void ADDOP()
     switch (SYM_COUR.CODE)
     {
     case PLUS_TOKEN:
-        Test_Symbole(SYM_COUR.CODE, PLUS_ERR);
+        Test_Symbole(PLUS_TOKEN, PLUS_ERR);
         break;
     case MOINS_TOKEN:
-        Test_Symbole(SYM_COUR.CODE, MOINS_ERR);
+        Test_Symbole(MOINS_TOKEN, MOINS_ERR);
         break;
     default:
         Erreur(ERREUR_ERR);
@@ -652,16 +682,74 @@ void MULOP()
     switch (SYM_COUR.CODE)
     {
     case MULT_TOKEN:
-        Test_Symbole(SYM_COUR.CODE, MULT_ERR);
+        Test_Symbole(MULT_TOKEN, MULT_ERR);
         break;
     case DIV_TOKEN:
-        Test_Symbole(SYM_COUR.CODE, DIV_ERR);
+        Test_Symbole(DIV_TOKEN, DIV_ERR);
         break;
     default:
         Erreur(ERREUR_ERR);
         break;
     }
 }
+
+void POUR()
+{
+    Test_Symbole(FOR_TOKEN, FOR_ERR);
+    Test_Symbole(ID_TOKEN, ID_ERR);
+    Test_Symbole(AFF_TOKEN, AFF_ERR);
+
+    switch (SYM_COUR.CODE)
+    {
+    case DOWNTO_TOKEN:
+        Test_Symbole(DOWNTO_TOKEN, DOWNTO_ERR);
+        break;
+    case INTO_TOKEN:
+        Test_Symbole(INTO_TOKEN, INTO_ERR);
+        break;
+    default:
+        Erreur(ERREUR_ERR);
+        break;
+    }
+
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    Test_Symbole(DO_TOKEN, DO_ERR);
+    INST();
+
+}
+
+/*
+REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN*/
+
+void REPETER(){
+    Test_Symbole(REPEAT_TOKEN, REPEAT_ERR);
+    INST();
+    Test_Symbole(UNTIL_TOKEN, UNTIL_ERR);
+    COND();
+}
+
+void CAS()
+{
+    Test_Symbole(CASE_TOKEN, CASE_ERR);
+    Test_Symbole(ID_TOKEN, ID_ERR);
+    Test_Symbole(OF_TOKEN, OF_TOKEN);
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    Test_Symbole(DDOT_TOKEN, DDOT_ERR);
+    INST();
+     while (SYM_COUR.CODE == NUM_TOKEN)
+    {
+        Sym_Suiv();
+        Test_Symbole(DDOT_TOKEN, DDOT_ERR);
+        INST();
+    }
+    if (SYM_COUR.CODE == ELSE_TOKEN) {
+        Sym_Suiv();
+        INST();
+    }
+    
+    Test_Symbole(END_TOKEN, END_ERR);
+}
+
 
 int main()
 {

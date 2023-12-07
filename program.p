@@ -1,7 +1,8 @@
 program test11;
-const toto=21555;lala=547;lolo=745;
+const toto=21;
 var x, y;
 Begin
-    x:=toto;
-    read(y);
-end
+x:=toto;
+read(y);
+write(x)
+end.
